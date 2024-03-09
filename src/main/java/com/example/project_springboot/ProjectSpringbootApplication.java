@@ -5,6 +5,7 @@ import com.example.project_springboot.repository.ConsultationRepository;
 import com.example.project_springboot.repository.MedecinRepository;
 import com.example.project_springboot.repository.PatientRepository;
 import com.example.project_springboot.repository.RendezVousRepository;
+import com.example.project_springboot.service.IHospitalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -30,9 +31,10 @@ public class ProjectSpringbootApplication {
 //pour ajouter des donnees et les enregistrer au niveau de la DB on va implementer
 // l'interface commandlinerunner tout en utilisant la methode run
 // qui va executer apres LE DEMARRage de spring //pour gerer les donnees on va utiliser spring data :
-@Bean //every method va executer durant le demarage de l'app et il va creer un objet
-CommandLineRunner  start(PatientRepository patientRepository, MedecinRepository medecinRepository, RendezVousRepository rendezVousRepository, ConsultationRepository consultationRepository){
-            return  args -> {
+@Bean //every method va executer durant le demarage de l'app et il va creer un objet // injection des dependances laiiser sspring cherche l'implementation de l'interface jpae et l'injecter c'est ca le metier dde spring c'est du code technique
+CommandLineRunner  start(IHospitalService HospitalService,PatientRepository patientRepository,MedecinRepository medecinRepository,RendezVousRepository rendezVousRepository){//pour faciliter de ne pas creer plsieurs objet de chaque classe on va creer un couche service contient tous
+        //on va utiliser directement la couche service (metier) dans la pratique avant de creer un objet il y a des traitement à faire
+        return  args -> {
                 //tous ce code va executer au demarage de app //ici je vais gerer les donnees avec cette composante spring et le contenue de la methode RUN()
                 //je vais creer le constructeur vide puis avoir set toutes les attributs : // la classe patient on va creer une boucle stream of
 //patients
@@ -42,7 +44,8 @@ CommandLineRunner  start(PatientRepository patientRepository, MedecinRepository 
                     patient.setName(name);
                     patient.setDateNaissance(new Date());
                     patient.setMalade(true);
-                    patientRepository.save(patient);
+                    HospitalService.savePatient(patient);
+                  //  patientRepository.save(patient);
                 });
 //medecin
                 Stream.of("mohamed","aymane","yasmine").
@@ -51,7 +54,7 @@ CommandLineRunner  start(PatientRepository patientRepository, MedecinRepository 
                             medecin.setName(name);
                             medecin.setSpecialite(Math.random()>0.5?"Cardio":"Dentiste");
                             medecin.setEmail(name+"@gmail.com");
-                            medecinRepository.save(medecin);
+                            HospitalService.saveMedecin(medecin);
                         });
                 //Je veux consulter un patient : un patient qui a par exemple un id = 3;
                 Patient patient3 = patientRepository.findById(Long.valueOf(3)).get();//j'ai le patient je veux afficher les infos
@@ -68,7 +71,7 @@ CommandLineRunner  start(PatientRepository patientRepository, MedecinRepository 
                 rendezVous.setStatus(StatusRDV.PENDING);
                 rendezVous.setPatient(patient3);
                 rendezVous.setMedecin(medecin);
-                rendezVousRepository.save(rendezVous);
+                HospitalService.saveRendezVous(rendezVous);
 
 
                 //creer une consultation mais on veut le meme date du rendez vous :// je vais selectionenr le rendez vous d'abord :
@@ -78,22 +81,10 @@ CommandLineRunner  start(PatientRepository patientRepository, MedecinRepository 
                 consultation.setDateConsulation(rendezVous1.getDate());
                 consultation.setRapport("*****Rapport de consultation.........****");
                 consultation.setRendezVous(rendezVous1);
-                consultationRepository.save(consultation);
+                HospitalService.saveConsultation(consultation);
             };
 
 
 }
 }
 
-/*
-* apres la conenxion avec la DB , on va creer la classe patientcontroller contient
-* @controller
-* puis fait appeler petient repository + getmapping("index")
-* en creant le modele dont lequele on va stocker la lste des patients pour les affihcer au niveau de templates patients.html
-* incluant le thymleaf en xmlns:http://....
-* et puis on peut avoir les donnees affiches et si on veut les designer plus en utilisant BOOTSTRAP via webjars bootstrap
-*puis on ajoute les fonctions au niveau de mon controlleur such as : delete
-*ajoute de JS pour interagir avec localhost
-*utiliser page<> pour avoir les pages au niveau de mon app  in inedex methodxxx
-*
-* */
